@@ -38,6 +38,7 @@ enableRobotsTXT = true
 [params]
 showReadingTime = true
 defaultTheme = 'auto'
+mainSections = ['blog', 'howto']
     
     [params.homeInfoParams]
         Title = 'Hi there 👋'

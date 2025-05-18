@@ -1,4 +1,4 @@
-baseURL = 'https://blog.getpid.dev/'
+baseURL = 'https://getpid.dev/'
 languageCode = 'en-us'
 title = 'getpid.dev'
 theme = 'papermod'

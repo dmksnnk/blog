@@ -11,7 +11,7 @@ tags:
 > Previous parts:
 > - [Writing HTTP3 Server](/blog/http3/writing-http3-server/)
 
-Today we will create HTTP/3 client to interact with our [[Writing HTTP3 Server|HTTP/3 server]].
+Today we will create HTTP/3 client to interact with our [HTTP/3 Server](/blog/http3/writing-http3-server/).
 
 First of all you'll need the running HTTP/3 server. Run it in separate terminal:
 

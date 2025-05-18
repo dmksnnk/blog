@@ -27,3 +27,6 @@ public/
 
 # chat instructions
 .instructions.md
+
+# Hugo build lock file
+.hugo_build.lock

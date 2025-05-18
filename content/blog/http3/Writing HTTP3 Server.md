@@ -1,0 +1,174 @@
+---
+date: '2025-05-08T18:44:39+02:00'
+draft: true
+title: 'Writing HTTP/3 Server'
+slug: http3-server
+showToc: true
+tags:
+  - HTTP3
+---
+
+Today, we will go through the process of setting up a simple HTTP/3 server and verifying its functionality.
+
+We will be using [quic-go](https://github.com/quic-go/quic-go) for for this purpose.
+
+## Generating Certificate
+
+Since HTTP/3 requires all traffic to be encrypted, we'll need a certificate. For our test, we can generate a self-signed TLS certificate for `localhost`. Go has a [build-in tool](https://github.com/golang/go/blob/master/src/crypto/tls/generate_cert.go), which you can run like this:
+
+```sh
+go run $(go env GOROOT)/src/crypto/tls/generate_cert.go --host localhost
+```
+
+`$(go env GOROOT)` will evaluate to the GOROOT path for whatever version of Go you are using.
+
+Alternatively, you can use `openssl` to generate a certificate.
+
+## HTTP/3 server
+
+The HTTP/3 handler uses the same `http.Handler` interface because, ultimately, it is still the HTTP protocol underneath. Later in the series, we will learn how to stream data from a client or a server. 
+
+You'll need to provide an address to listen on and a handler for incoming requests:
+
+```go filename=server.go
+srv := &http3.Server{
+	// listen on port 8080
+	Addr: ":8080",
+	Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!\n"))
+	}),
+}
+
+```
+
+Provide the path to the generated certificate and private key so it can serve a TLS connection:
+
+```go filename=server.go
+// path to generated cert and key
+if err := srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
+	panic(err)
+}
+```
+
+Now, run the server:
+
+```sh
+go run server.go
+```
+
+Let's test it with `curl`. You can use a pre-built `curl` with HTTP/3 support from <https://github.com/stunnel/static-curl>.
+
+Run the following command in another terminal:
+
+```sh
+curl --verbose --insecure --http3-only https://localhost:8080
+```
+
+The `--insecure`  option  tells `curl` to skip verification of the server's TLS certificate.
+
+The output will look something like this:
+
+```
+*   Trying 127.0.0.1:8080...
+* Server certificate:
+*  subject: O=Acme Co
+*  start date: May  2 11:52:13 2025 GMT
+*  expire date: May  2 11:52:13 2026 GMT
+*  issuer: O=Acme Co
+*  SSL certificate verify result: self-signed certificate (18), continuing anyway.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+* Connected to localhost (127.0.0.1) port 8080
+* using HTTP/3
+* [HTTP/3] [0] OPENED stream for https://localhost:8080/
+* [HTTP/3] [0] [:method: GET]
+* [HTTP/3] [0] [:scheme: https]
+* [HTTP/3] [0] [:authority: localhost:8080]
+* [HTTP/3] [0] [:path: /]
+* [HTTP/3] [0] [user-agent: curl/8.12.1]
+* [HTTP/3] [0] [accept: */*]
+> GET / HTTP/3
+> Host: localhost:8080
+> User-Agent: curl/8.12.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/3 200 
+< content-type: text/plain; charset=utf-8
+< date: Fri, 02 May 2025 12:11:26 GMT
+< content-length: 14
+< 
+Hello, World!
+* Connection #0 to host localhost left intact
+```
+
+## Trusting Server's Certificate
+
+Instead of skipping the server's verification with `--insecure`,  we can provide the server's certificate (since it is self-signed):
+
+```sh
+ curl --verbose --cacert cert.pem  --http3 https://localhost:8080/
+```
+
+Here, we use `--cacert cert.pem` to provide  `curl`  with the certificate needed to verify the peer.
+
+This command will produce output similar to the following:
+
+```
+*  CAfile: cert.pem
+*  CApath: /etc/ssl/certs
+* Server certificate:
+*  subject: O=Acme Co
+*  start date: May  3 12:58:35 2025 GMT
+*  expire date: May  3 12:58:35 2026 GMT
+*  subjectAltName: host "localhost" matched cert's "localhost"
+*  issuer: O=Acme Co
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type RSA (2048/112 Bits/secBits), signed using sha256WithRSAEncryption
+```
+
+As you can see in the output  `host "localhost" matched cert's "localhost"`, `curl` now successfully verifies and trusts the server's certificate.
+
+## Advertise HTTP/3 on TLS Handshake
+
+With a small change, we can correctly advertise support for HTTP/3 during the TLS handshake.
+
+First, load the generated certificate and private key:
+
+```go
+// path to 
+cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+if err != nil {
+	panic(err)
+}
+```
+
+Then, pass the certificate to the server's TLS configuration, along with advertising HTTP/3 support:
+
+```go
+srv := &http3.Server{
+	// listen on port 8080
+	Addr: "127.0.0.1:8080",
+	TLSConfig: &tls.Config{
+		// pass certificate
+		Certificates: []tls.Certificate{cert},
+		// advertise HTTP/3 support
+		NextProtos:   []string{http3.NextProtoH3},
+	},
+	Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!\n"))
+	}),
+}
+if err := srv.ListenAndServe(); err != nil {
+	panic(err)
+}
+```
+
+## Recap
+
+Today, we learned how to write a simple HTTP/3 server using a self-signed certificate, correctly advertise HTTP/3 support, and test the setup using `curl`.
+
+> **Next Parts:**
+> - Write an [HTTP3 Client](/blog/http3/http3-server/).
+> - Stream data from HTTP/3 server.
+> - Stream data from an HTTP/3 client.
+> - Send HTTP/3 DATAGRAMs.

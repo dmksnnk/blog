@@ -1,0 +1,44 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'getpid.dev'
+theme = 'papermod'
+
+[[menu.main]]
+name = "Blog"
+url = "/blog/"
+weight = 1
+
+[[menu.main]]
+name = "How-tos"
+url = "/howto/"
+weight = 2
+
+[[menu.main]]
+name = "Tags"
+url = "/tags/"
+weight = 3
+
+[[menu.main]]
+name = "Search"
+url = "/search/"
+weight = 4
+
+# Generate a nice robots.txt for SEO
+enableRobotsTXT = true
+
+# JSON necessary for search
+[outputs]
+    home = ['html', 'rss', 'json'] 
+
+[params]
+showReadingTime = true
+defaultTheme = 'auto'
+    
+    [params.homeInfoParams]
+        Title = 'Hi there 👋'
+        Content = """This is a personal blog where I share my knowledge and experiences about software development,         Go programming, and more.
+
+Feel free to connect with me on [GitHub](https://github.com/dmksnnk)."""
+    [[params.socialIcons]]
+        name = 'github'
+        url = 'https://github.com/dmksnnk'

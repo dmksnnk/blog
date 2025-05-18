@@ -1,6 +1,5 @@
 ---
 date: '2024-08-26T16:30:00+02:00'
-draft: true
 title: 'How to access private repos in Go'
 slug: 'access-private-repos-go'
 tags:
@@ -9,15 +8,14 @@ tags:
   - 'GoLand'
 ---
 
-When downloading packages, Go checks the public [Go Checksum Database](https://sum.golang.org/) to verify the package checksum. Private git packages, like the ones on private GitLab, aren’t in that database, so downloading will fail.
+When downloading packages, Go checks the public [Go Checksum Database](https://sum.golang.org/) to verify the package checksum. Private Git packages, such as those on a private GitLab instance, aren’t in that database, so downloading them will fail.
 
-This can be fixed by setting `GOPRIVATE=private.example.com`, which will instruct Go not to check the Checksum Database for the packages on the `private.example.com` domain.
+This can be fixed by setting `GOPRIVATE=private.example.com`. This instructs Go not to check the Checksum Database for packages in the `private.example.com` domain.
 
 For GitLab, first set up access to repositories:
 
-1. Create a GitLab Access Token with the `read_api` scope.
-
-2. Update `${HOME}/.netrc` file, and add:
+1. Create a GitLab Access Token with the `read_api` scope.
+2. Update your `${HOME}/.netrc` file, and add:
 
 ```
 machine private.example.com
@@ -25,17 +23,17 @@ machine private.example.com
     password gitlab_access_token
 ```
 
-More info can be found in the [GitLab docs](https://docs.gitlab.com/ee/user/project/use_project_as_go_package.html).
+More information can be found in the [GitLab documentation](https://docs.gitlab.com/ee/user/project/use_project_as_go_package.html).
 
-Then, set up the IDE to work with private git packages.
+Then, set up the IDE to work with private Git packages.
 
 ## GoLand
 
-Go to Settings → Go → Go Modules and add `GOPRIVATE=private.example.com` there.
+Go to Settings → Go → Go Modules and add `GOPRIVATE=private.example.com`.
 
 ## VS Code
 
-Add to your settings:
+Add the following to your settings:
 
 ```json
 "go.toolsEnvVars": {

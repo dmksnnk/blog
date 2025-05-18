@@ -1,6 +1,5 @@
 ---
 date: '2025-01-19T13:00:00+02:00'
-draft: true
 title: 'Build a Docker image with private repos'
 slug: 'build-docker-image-private-repos'
 tags:
@@ -10,7 +9,7 @@ tags:
   - 'Secrets'
 ---
 
-To build a Docker image that has dependencies from private repositories, we should pass the `.netrc` configuration (see more in [How to access private repos in Go](/howto/access-private-repos-go)). Ideally, this configuration should be passed as a secret:
+To build a Docker image that has dependencies from private repositories, you should pass the `.netrc` configuration (see more in [How to access private repos in Go](/howto/access-private-repos-go)). Ideally, this configuration should be passed as a secret:
 
 ```docker
 FROM golang:1.22.2-alpine3.19 AS deps
@@ -25,7 +24,7 @@ RUN --mount=type=secret,id=netrc \
 
 ## GitLab CI/CD
 
-In GitLab CI, to build the image, we need to create a `.netrc` configuration with `CI_JOB_TOKEN` and pass it to Kaniko secrets. Here is an example:
+In GitLab CI, to build the image, you need to create a `.netrc` configuration with `CI_JOB_TOKEN` and pass it to Kaniko secrets. Here is an example:
 
 ```yaml
 build:

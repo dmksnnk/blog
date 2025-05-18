@@ -1,6 +1,5 @@
 ---
 date: '2025-04-28T15:30:00+02:00'
-draft: true
 title: 'Test smell'
 slug: 'test-smell'
 tags:

@@ -1,6 +1,5 @@
 ---
 date: '2025-05-08T18:44:39+02:00'
-draft: true
 title: 'Writing HTTP/3 Server'
 slug: http3-server
 showToc: true

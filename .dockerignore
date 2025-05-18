@@ -1,0 +1,12 @@
+Dockerfile
+*.Dockerfile
+*.md
+docker-compose.yml
+.git
+.gitignore
+*.env
+.vscode
+.idea
+.DS_Store
+# GitHub action
+.github

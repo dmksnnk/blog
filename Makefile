@@ -5,7 +5,7 @@ image = ghcr.io/dmksnnk/blog:$(version)
 
 .PHONY: docker-build
 docker-build:
-	@docker build --platform linux/amd64 -f Dockerfile --tag=$(image) .
+	@docker build -f Dockerfile --tag=$(image) .
 
 .PHONY: hugo-build-local
 hugo-build-local:

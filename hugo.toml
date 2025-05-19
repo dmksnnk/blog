@@ -3,6 +3,9 @@ languageCode = 'en-us'
 title = 'getpid.dev'
 theme = 'papermod'
 
+# Generate a nice robots.txt for SEO
+enableRobotsTXT = true
+
 [[menu.main]]
 name = "🏠"
 url = "/"
@@ -28,8 +31,7 @@ name = "Search"
 url = "/search/"
 weight = 5
 
-# Generate a nice robots.txt for SEO
-enableRobotsTXT = true
+
 
 # JSON necessary for search
 [outputs]

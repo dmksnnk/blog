@@ -2,6 +2,7 @@
 date: '2025-01-19T13:00:00+02:00'
 title: 'Build a Docker image with private repos'
 slug: 'build-docker-image-private-repos'
+description: 'How to build Docker images with dependencies from private repositories using Docker secrets.'
 tags:
   - 'Docker'
   - 'Go'

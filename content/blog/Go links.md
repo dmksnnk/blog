@@ -2,6 +2,7 @@
 date: '2024-08-26T11:00:00+02:00'
 title: 'Go Links'
 slug: 'go-links'
+description: 'A curated collection of useful Go programming links and resources.'
 tags:
   - 'Go'
 ---

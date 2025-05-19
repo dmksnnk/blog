@@ -2,6 +2,7 @@
 date: '2024-08-26T16:00:00+02:00'
 title: 'Set up a different Go version for a project'
 slug: 'setup-project-go-version'
+description: 'How to use a specific Go version for your project in VS Code and GoLand.'
 tags:
   - 'Go'
   - 'VSCode'

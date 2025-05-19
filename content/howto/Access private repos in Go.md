@@ -2,6 +2,7 @@
 date: '2024-08-26T16:30:00+02:00'
 title: 'How to access private repos in Go'
 slug: 'access-private-repos-go'
+description: 'Configure Go to access private repositories.'
 tags:
   - 'Go'
   - 'VSCode'

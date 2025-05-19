@@ -3,6 +3,7 @@ date: '2025-05-08T18:44:39+02:00'
 title: 'Writing HTTP/3 Server'
 slug: http3-server
 showToc: true
+description: 'Set up a simple HTTP/3 server in Go and test with curl.'
 tags:
   - HTTP3
 ---

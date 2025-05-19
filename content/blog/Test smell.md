@@ -2,6 +2,7 @@
 date: '2025-04-28T15:30:00+02:00'
 title: 'Test smell'
 slug: 'test-smell'
+description: 'Recognize and address common test smells to improve your tests and code quality.'
 tags:
   - testing
 ---
@@ -22,4 +23,4 @@ This part is mostly about gut feelings. When you are writing tests or updating t
 
 - If tests are not easy to run, they will run less often, which will increase the probability of a bug.
 
-- If it's difficult to write tests for a specific piece of code, it is a sign that you need to split the code in more manageable chunks, change the API or having too many dependencies. 
+- If it's difficult to write tests for a specific piece of code, it is a sign that you need to split the code in more manageable chunks, change the API or having too many dependencies.

@@ -31,8 +31,6 @@ name = "Search"
 url = "/search/"
 weight = 5
 
-
-
 # JSON necessary for search
 [outputs]
     home = ['html', 'rss', 'json'] 
@@ -45,7 +43,10 @@ mainSections = ['blog', 'howto']
     [params.homeInfoParams]
         Title = 'Hi there 👋'
         Content = """This is a personal blog where I share my knowledge and experiences about software development, Go programming, and more.
-Feel free to connect with me on [GitHub](https://github.com/dmksnnk)."""
+Feel free to connect with me on [GitHub](https://github.com/dmksnnk) or [LinkedIn](http://www.linkedin.com/in/dmytro-kasianenko/)."""
     [[params.socialIcons]]
         name = 'github'
         url = 'https://github.com/dmksnnk'
+    [[params.socialIcons]]
+        name = 'linkedin'
+        url = 'http://www.linkedin.com/in/dmytro-kasianenko/'

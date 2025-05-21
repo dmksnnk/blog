@@ -50,6 +50,35 @@ if err := srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
 }
 ```
 
+{{< details summary="Full code" >}}
+
+```go
+// server.go
+package main
+
+import (
+	"net/http"
+
+	"github.com/quic-go/quic-go/http3"
+)
+
+func main() {
+	srv := &http3.Server{
+		// listen on port 8080
+		Addr: "127.0.0.1:8080",
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Hello, World!\n"))
+		}),
+	}
+	// path to generated cert and key
+	if err := srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
+		panic(err)
+	}
+}
+
+```
+{{< /details >}}
+
 Now, run the server:
 
 ```sh
@@ -163,12 +192,49 @@ if err := srv.ListenAndServe(); err != nil {
 }
 ```
 
+{{< details summary="Full code" >}}
+
+```go
+// server.go
+package main
+
+import (
+	"crypto/tls"
+	"net/http"
+
+	"github.com/quic-go/quic-go/http3"
+)
+
+func main() {
+	// pass here generated cert and key
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		panic(err)
+	}
+	srv := &http3.Server{
+		// listen on port 8080
+		Addr: ":8080",
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			NextProtos:   []string{http3.NextProtoH3},
+		},
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Hello, World!\n"))
+		}),
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		panic(err)
+	}
+}
+```
+{{< /details >}}
+
 ## Recap
 
 Today, we learned how to write a simple HTTP/3 server using a self-signed certificate, correctly advertise HTTP/3 support, and test the setup using `curl`.
 
 > **Next Parts:**
-> - Write an [HTTP3 Client](/blog/http3/http3-server/).
+> - Write an [HTTP3 Client](/blog/http3/http3-client/).
 > - Stream data from HTTP/3 server.
 > - Stream data from an HTTP/3 client.
 > - Send HTTP/3 DATAGRAMs.

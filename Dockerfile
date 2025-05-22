@@ -1,6 +1,6 @@
 # adding deps
 
-FROM golang:1.23.5-alpine3.20 AS deps
+FROM golang:1.24.3-alpine3.21 AS deps
 WORKDIR /go/src/app
 
 COPY go.mod go.sum ./
@@ -20,8 +20,8 @@ RUN GOOS=linux GOARCH=amd64 go build -v -o $BUILD_DIR/server ./cmd/...
 
 # certs
 
-FROM golang:1.23.1-alpine3.20 AS certs
-RUN apk add --no-cache ca-certificates=20240705-r0
+FROM golang:1.24.3-alpine3.21 AS certs
+RUN apk add --no-cache ca-certificates=20241121-r1
 
 # copy to scratch
 

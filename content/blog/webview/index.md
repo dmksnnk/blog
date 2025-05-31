@@ -1,9 +1,9 @@
 ---
 date: '2025-05-28T22:02:23+02:00'
-draft: true
 title: 'Webview'
+summary: 'Create desktop applications using Go and Webview, packaging them into a single executable.'
 showToc: true
-
+slug: 'go-webview-gui'
 tags:
     - webview
     - Go
@@ -48,16 +48,16 @@ w.Run()
 package main
 
 import (
-	webview "github.com/webview/webview_go"
+    webview "github.com/webview/webview_go"
 )
 
 func main() {
-	w := webview.New(false)
-	defer w.Destroy()
+    w := webview.New(false)
+    defer w.Destroy()
 
-	w.SetTitle("Hello, WebView!")
-	w.SetSize(480, 480, webview.HintNone)
-	w.Run()
+    w.SetTitle("Hello, WebView!")
+    w.SetSize(480, 480, webview.HintNone)
+    w.Run()
 }
 
 ```
@@ -236,69 +236,69 @@ mux.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
 package main
 
 import (
-	"embed"
-	"errors"
-	"fmt"
-	"html/template"
-	"log/slog"
-	"net"
-	"net/http"
-	"os"
+    "embed"
+    "errors"
+    "fmt"
+    "html/template"
+    "log/slog"
+    "net"
+    "net/http"
+    "os"
 
-	webview "github.com/webview/webview_go"
+    webview "github.com/webview/webview_go"
 )
 
 //go:embed templates/*
 var templates embed.FS
 
 func main() {
-	listener, err := net.Listen("tcp4", "127.0.0.1:0")
-	if err != nil {
-		slog.Error("listen on TCP", "error", err)
-		os.Exit(1)
-	}
+    listener, err := net.Listen("tcp4", "127.0.0.1:0")
+    if err != nil {
+        slog.Error("listen on TCP", "error", err)
+        os.Exit(1)
+    }
 
-	tmpl, err := template.ParseFS(templates, "templates/*.html")
-	if err != nil {
-		slog.Error("parse templates", "error", err)
-		os.Exit(1)
-	}
+    tmpl, err := template.ParseFS(templates, "templates/*.html")
+    if err != nil {
+        slog.Error("parse templates", "error", err)
+        os.Exit(1)
+    }
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl.ExecuteTemplate(w, "index.html", nil)
-	})
-	mux.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, fmt.Sprintf("whoopsies: %s", err), http.StatusInternalServerError)
-			return
-		}
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        tmpl.ExecuteTemplate(w, "index.html", nil)
+    })
+    mux.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
+        if err := r.ParseForm(); err != nil {
+            http.Error(w, fmt.Sprintf("whoopsies: %s", err), http.StatusInternalServerError)
+            return
+        }
 
-		name := r.FormValue("name")
-		data := map[string]string{"name": name}
-		tmpl.ExecuteTemplate(w, "greeting.html", data)
-	})
+        name := r.FormValue("name")
+        data := map[string]string{"name": name}
+        tmpl.ExecuteTemplate(w, "greeting.html", data)
+    })
 
-	srv := http.Server{
-		Handler: mux,
-	}
+    srv := http.Server{
+        Handler: mux,
+    }
 
-	go func() {
-		if err := srv.Serve(listener); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
-				slog.Error("server error", "error", err)
-				os.Exit(1)
-			}
-		}
-	}()
+    go func() {
+        if err := srv.Serve(listener); err != nil {
+            if !errors.Is(err, http.ErrServerClosed) {
+                slog.Error("server error", "error", err)
+                os.Exit(1)
+            }
+        }
+    }()
 
-	w := webview.New(true)
-	defer w.Destroy()
+    w := webview.New(true)
+    defer w.Destroy()
 
-	w.SetTitle("Hello, WebView!")
-	w.SetSize(480, 480, webview.HintNone)
-	w.Navigate("http://" + listener.Addr().String())
-	w.Run()
+    w.SetTitle("Hello, WebView!")
+    w.SetSize(480, 480, webview.HintNone)
+    w.Navigate("http://" + listener.Addr().String())
+    w.Run()
 }
 ```
 

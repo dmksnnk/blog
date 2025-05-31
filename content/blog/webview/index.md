@@ -2,15 +2,19 @@
 date: '2025-05-28T22:02:23+02:00'
 draft: true
 title: 'Webview'
----
+showToc: true
 
+tags:
+    - webview
+    - Go
+---
 
 Today we will lear how to build a cross-platform GUI with [Webview](https://github.com/webview/webview) using its [Go bindings](https://github.com/webview/webview_go) and how to package all of it into a singe executable for easier distribution.
 
-Webview launches a new window which uses rendering engines of a browser already present on the system to show HTMLs and run JavaSripts. This could be a nice alternative to the bulky Electon apps.
+Webview launches a new window which uses rendering engines of a browser already present on the system to show HTMLs and run JavaSripts. This could be a nice alternative to the bulky Electon apps, but still be able to build a beautiful app using Web technologies.
 
 If you take a look at the [library itself](https://pkg.go.dev/github.com/webview/webview_go),
-it has a really small footprint, just creating a window and bunch of operations with it: destorying window, setting size, setting HTML, JS and navigating to the page. We will use the latter.
+it has a really small footprint, just creating a window and bunch of operations with it: destorying window, setting size, setting HTML, JavaScript and navigating to the page. We will use the latter.
 
 ## Architecture
 
@@ -37,7 +41,30 @@ w.SetSize(480, 480, webview.HintNone)
 w.Run()
 
 ```
-And here is how it looks like:
+{{< details summary="webserver.go" >}}
+
+
+```go
+package main
+
+import (
+	webview "github.com/webview/webview_go"
+)
+
+func main() {
+	w := webview.New(false)
+	defer w.Destroy()
+
+	w.SetTitle("Hello, WebView!")
+	w.SetSize(480, 480, webview.HintNone)
+	w.Run()
+}
+
+```
+
+{{< /details >}}
+
+`go run ./webserver.go` and here is how it looks like:
 
 ![Webview window](hello_webview.png#center)
 
@@ -73,38 +100,57 @@ w.Navigate("http://" + u.String())
 
 Putting it all together, we are ready to serve our fist page:
 
+{{< details summary="webserver.go" >}}
+
 ```go
-listener, err := net.Listen("tcp4", "127.0.0.1:0")
-if err != nil {
-    slog.Error("listen on TCP", "error", err)
-    os.Exit(1)
-}
+package main
 
-mux := http.NewServeMux()
-mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Hello, WebView!\n"))
-})
-srv := http.Server{
-    Handler: mux,
-}
+import (
+    "errors"
+    "log/slog"
+    "net"
+    "net/http"
+    "os"
 
-go func() {
-    if err := srv.Serve(listener); err != nil {
-        if !errors.Is(err, http.ErrServerClosed) {
-            slog.Error("server error", "error", err)
-            os.Exit(1)
-        }
+    webview "github.com/webview/webview_go"
+)
+
+func main() {
+    listener, err := net.Listen("tcp4", "127.0.0.1:0")
+    if err != nil {
+        slog.Error("listen on TCP", "error", err)
+        os.Exit(1)
     }
-}()
 
-w := webview.New(false)
-defer w.Destroy()
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.Write([]byte("Hello, WebView!\n"))
+    })
+    srv := http.Server{
+        Handler: mux,
+    }
 
-w.SetTitle("Hello, WebView!")
-w.SetSize(480, 480, webview.HintNone)
-w.Navigate("http://" + listener.Addr().String())
-w.Run()
+    go func() {
+        if err := srv.Serve(listener); err != nil {
+            if !errors.Is(err, http.ErrServerClosed) {
+                slog.Error("server error", "error", err)
+                os.Exit(1)
+            }
+        }
+    }()
+
+    w := webview.New(false)
+    defer w.Destroy()
+
+    w.SetTitle("Hello, WebView!")
+    w.SetSize(480, 480, webview.HintNone)
+    w.Navigate("http://" + listener.Addr().String())
+    w.Run()
+}
+
 ```
+
+{{< /details >}}
 
 ![First page](first_page.png#center)
 
@@ -113,9 +159,7 @@ Easy as this you now have your fist HTML served on webview!
 ## Interactivity
 
 Let's add some interactivity to our page: a form and a button! We ask user a name to greed it.
-
 We will define two HTML pages, one with a form asking for a name and another with a greeting.
-
 Here is a simple HTML we will use. First one is a form:
 
 {{< details summary="index.html" >}}
@@ -196,5 +240,91 @@ Give it a quick try:
 
 {{< /sides >}}
 
+## Glamour
 
-TODO: building for windows from linux and mac
+Let's learn how to serve static files. We will serve CSS to add some beauty 💅 to the pages.
+
+Create a file `style.css` in the `static` folder and put there some CSS magic:
+
+{{< details summary="style.css" >}}
+
+```css
+body {
+    font-family: Consolas, monospace;
+    margin: 40px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+input {
+    padding: 8px;
+    margin: 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+```
+
+{{< /details >}}
+
+Now, embed all files in the static folder:
+
+```go
+//go:embed static/*
+var static embed.FS
+```
+
+And serve them:
+
+```go
+mux.Handle("/static/", http.FileServerFS(static))
+```
+
+Last step is to reference this CSS in our HTML. Add the next lines to the files in `templates` directory, just after `html` tag:
+
+```html
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+```
+
+Run the webserver again and see how it shines! ✨
+
+You can use the same technique to serve images, JavaScript or anything you'd like.
+
+## Cross-compiling for Windows
+
+To be able to your application from Linux or Mac for Windows, 
+you will need the [mingw-w64](https://www.mingw-w64.org/).
+
+For various flavors of Linux, check the link above for the instructions. For example, here is for [Debian/Ubuntu](https://www.mingw-w64.org/getting-started/debian/).
+
+For Mac, install it via brew:
+
+```sh
+brew install mingw-w64
+```
+
+### Building
+
+To build it, you must use CGO and provide correct flags to the compiler, 
+here what's works for me:
+
+```sh
+GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ \
+    go build -ldflags "-H windowsgui" -v -o webview.exe ./webview.go
+```
+
+## Recap
+
+Hopefully, we have learned how to build a simple Webview app using local web server for renderign pages and serving static files.
+
+Now go and explose the endless sea of possibilities you can do with it.

@@ -9,12 +9,12 @@ tags:
     - Go
 ---
 
-Today we will lear how to build a cross-platform GUI with [Webview](https://github.com/webview/webview) using its [Go bindings](https://github.com/webview/webview_go) and how to package all of it into a singe executable for easier distribution.
+Today we will learn how to build a cross-platform GUI with [Webview](https://github.com/webview/webview) using its [Go bindings](https://github.com/webview/webview_go) and how to package it all into a single executable for easier distribution.
 
-Webview launches a new window which uses rendering engines of a browser already present on the system to show HTMLs and run JavaSripts. This could be a nice alternative to the bulky Electon apps, but still be able to build a beautiful app using Web technologies.
+Webview launches a new window that uses the rendering engine of a browser already present on the system to show HTML and run JavaScript. This can be a nice alternative to bulky Electron apps, while still allowing you to build beautiful applications using web technologies.
 
 If you take a look at the [library itself](https://pkg.go.dev/github.com/webview/webview_go),
-it has a really small footprint, just creating a window and bunch of operations with it: destorying window, setting size, setting HTML, JavaScript and navigating to the page. We will use the latter.
+it has a very small footprint, offering basic window creation and operations like destroying the window, setting its size, setting HTML and JavaScript, and navigating to a page. We will use the latter.
 
 ## Architecture
 
@@ -22,14 +22,14 @@ The application architecture will be simple:
 
 ![Application architecture](webview_architecture.png#center)
 
-There will be a webserver that will do all the heavy-lifting.
-We will do server-side rendring using HTML templates and try to avoid JavaScript as much as possible. We will use plain HTML forms and the webserser will be responsible for all the logic. Also, it will serve us assets, like CSS and images.
+There will be a web server that will do all the heavy lifting.
+We will do server-side rendering using HTML templates and try to avoid JavaScript as much as possible. We will use plain HTML forms, and the web server will be responsible for all the logic. Also, it will serve us assets, like CSS and images.
 
-The webview itself will be just a view. No Electron required.
+The Webview itself will be just a view. No Electron required.
 
 ## Showing the window
 
-Starting up with webview is pretty simple. Here is a code to run a new window 
+Starting up with Webview is pretty simple. Here's the code to run a new window
 with a title and specific size:
 
 ```go
@@ -64,7 +64,7 @@ func main() {
 
 {{< /details >}}
 
-`go run ./webserver.go` and here is how it looks like:
+`go run ./webserver.go` and here's what it looks like:
 
 ![Webview window](hello_webview.png#center)
 
@@ -72,33 +72,33 @@ Pretty neat, huh?
 
 ## Serving the HTML
 
-Now, let's serve our first page. For this we will need to have 
-an HTTP server (let's call it a webserver) which will give us content and instruct webview to navigate to our webserver.
+Now, let's serve our first page. For this, we will need to have
+an HTTP server (let's call it a web server) that will give us content and instruct Webview to navigate to our web server.
 
-Usually, when you run an HTTP server, you specify on which port it will run.
-We could choose a random port number, hoping the port is not already taken on the host's system. Instead, we will let the system to choose it for us.
+Usually, when you run an HTTP server, you specify the port on which it will run.
+We could choose a random port number, hoping the port is not already taken on the host's system. Instead, we will let the system choose one for us.
 
-First, we will create a TCP listener which will bind any port on localhost:
+First, we will create a TCP listener that will bind to any port on localhost:
 
 ```go
 // port 0 means port will be automatically chosen
 listener, err := net.Listen("tcp4", "127.0.0.1:0")
 ```
 
-And give the listener to HTTP server:
+And give the listener to the HTTP server:
 
 ```go
 srv := http.Server{...}
 srv.Serve(listener)
 ```
 
-Then, instruct webview window to navigate to the server's addres:
+Then, instruct the Webview window to navigate to the server's address:
 
 ```go
 w.Navigate("http://" + u.String())
 ```
 
-Putting it all together, we are ready to serve our fist page:
+Putting it all together, we are ready to serve our first page:
 
 {{< details summary="webserver.go" >}}
 
@@ -154,13 +154,13 @@ func main() {
 
 ![First page](first_page.png#center)
 
-Easy as this you now have your fist HTML served on webview!
+Easy as this, you now have your first HTML served in Webview!
 
 ## Interactivity
 
-Let's add some interactivity to our page: a form and a button! We ask user a name to greed it.
-We will define two HTML pages, one with a form asking for a name and another with a greeting.
-Here is a simple HTML we will use. First one is a form:
+Let's add some interactivity to our page: a form and a button! We'll ask the user for a name to greet them.
+We will define two HTML pages: one with a form asking for a name and another with a greeting.
+Here is the simple HTML we will use. The first is a form:
 
 {{< details summary="index.html" >}}
 
@@ -183,7 +183,7 @@ Here is a simple HTML we will use. First one is a form:
 
 {{< /details >}}
 
-And second one is a Go [template/html](https://pkg.go.dev/html/template) for adding a name of a person to greet:
+And the second is a Go [template/html](https://pkg.go.dev/html/template) for adding the name of the person to greet:
 
 {{< details summary="greeting.html" >}}
 
@@ -201,14 +201,14 @@ And second one is a Go [template/html](https://pkg.go.dev/html/template) for add
 {{< /details >}}
 
 
-Because we want our package to be self-contained, we will embed our templates into [embeddable file system](https://pkg.go.dev/embed#FS). If we put all our templates under `templates` folder, we can do next:
+Because we want our package to be self-contained, we will embed our templates into an [embeddable file system](https://pkg.go.dev/embed#FS). If we put all our templates under the `templates` folder, we can do the following:
 
 ```go
 //go:embed templates/*
 var templates embed.FS
 ```
 
-Now, as out templates as safely embedded, we can to parse the templates and serve them:
+Now that our templates are safely embedded, we can parse them and serve them:
 
 ```go
 tmpl, err := template.ParseFS(templates, "templates/*.html")
@@ -230,6 +230,80 @@ mux.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
 })
 ```
 
+{{< details summary="webserver.go" >}}
+
+```go
+package main
+
+import (
+	"embed"
+	"errors"
+	"fmt"
+	"html/template"
+	"log/slog"
+	"net"
+	"net/http"
+	"os"
+
+	webview "github.com/webview/webview_go"
+)
+
+//go:embed templates/*
+var templates embed.FS
+
+func main() {
+	listener, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil {
+		slog.Error("listen on TCP", "error", err)
+		os.Exit(1)
+	}
+
+	tmpl, err := template.ParseFS(templates, "templates/*.html")
+	if err != nil {
+		slog.Error("parse templates", "error", err)
+		os.Exit(1)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl.ExecuteTemplate(w, "index.html", nil)
+	})
+	mux.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, fmt.Sprintf("whoopsies: %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		name := r.FormValue("name")
+		data := map[string]string{"name": name}
+		tmpl.ExecuteTemplate(w, "greeting.html", data)
+	})
+
+	srv := http.Server{
+		Handler: mux,
+	}
+
+	go func() {
+		if err := srv.Serve(listener); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				slog.Error("server error", "error", err)
+				os.Exit(1)
+			}
+		}
+	}()
+
+	w := webview.New(true)
+	defer w.Destroy()
+
+	w.SetTitle("Hello, WebView!")
+	w.SetSize(480, 480, webview.HintNone)
+	w.Navigate("http://" + listener.Addr().String())
+	w.Run()
+}
+```
+
+{{< /details >}}
+
 Give it a quick try:
 
 {{< sides >}}
@@ -244,7 +318,7 @@ Give it a quick try:
 
 Let's learn how to serve static files. We will serve CSS to add some beauty 💅 to the pages.
 
-Create a file `style.css` in the `static` folder and put there some CSS magic:
+Create a file `style.css` in the `static` folder and add some CSS magic:
 
 {{< details summary="style.css" >}}
 
@@ -275,7 +349,7 @@ button {
 
 {{< /details >}}
 
-Now, embed all files in the static folder:
+Now, embed all files in the `static` folder:
 
 ```go
 //go:embed static/*
@@ -288,7 +362,7 @@ And serve them:
 mux.Handle("/static/", http.FileServerFS(static))
 ```
 
-Last step is to reference this CSS in our HTML. Add the next lines to the files in `templates` directory, just after `html` tag:
+The final step is to link this CSS in your HTML. Add the following lines to your HTML files in the `templates` directory, right after the opening `<html>` tag:
 
 ```html
 <head>
@@ -296,18 +370,25 @@ Last step is to reference this CSS in our HTML. Add the next lines to the files 
 </head>
 ```
 
-Run the webserver again and see how it shines! ✨
+Run the web server again and see how it shines! ✨
 
-You can use the same technique to serve images, JavaScript or anything you'd like.
+{{< sides >}}
+
+![Index page](index_page_css.png)
+
+![Greeting page](greeting_page_css.png)
+
+{{< /sides >}}
+
+You can use the same technique to serve images, JavaScript, or anything else you'd like.
 
 ## Cross-compiling for Windows
 
-To be able to your application from Linux or Mac for Windows, 
-you will need the [mingw-w64](https://www.mingw-w64.org/).
+To cross-compile your application for Windows from Linux or macOS, you will need [mingw-w64](https://www.mingw-w64.org/).
 
-For various flavors of Linux, check the link above for the instructions. For example, here is for [Debian/Ubuntu](https://www.mingw-w64.org/getting-started/debian/).
+For various Linux distributions, refer to the link above for installation instructions. For example, instructions for [Debian/Ubuntu are available here](https://www.mingw-w64.org/getting-started/debian/).
 
-For Mac, install it via brew:
+On macOS, you can install it using Homebrew:
 
 ```sh
 brew install mingw-w64
@@ -315,8 +396,7 @@ brew install mingw-w64
 
 ### Building
 
-To build it, you must use CGO and provide correct flags to the compiler, 
-here what's works for me:
+To build the application, you need to enable CGO and provide the correct flags to the compiler. Here’s the command that works for me:
 
 ```sh
 GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ \
@@ -325,6 +405,6 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64
 
 ## Recap
 
-Hopefully, we have learned how to build a simple Webview app using local web server for renderign pages and serving static files.
+In this guide, we've learned how to build a simple Webview application that uses a local web server to render pages and serve static files.
 
-Now go and explose the endless sea of possibilities you can do with it.
+Now, go and explore the endless possibilities that Webview offers.

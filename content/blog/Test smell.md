@@ -3,6 +3,8 @@ date: '2025-04-28T15:30:00+02:00'
 title: 'Test smell'
 slug: 'test-smell'
 description: 'Recognize and address common test smells to improve your tests and code quality.'
+cover:
+    image: 'test-smell.png'
 tags:
   - testing
 ---

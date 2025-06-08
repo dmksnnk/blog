@@ -26,7 +26,7 @@ jobs:
 
       - name: Build hugo
         env:
-          HUGO_PARAMS_ANALYTICSID: ${{ secrets.HUGO_PARAMS_ANALYTICSID }}
+          HUGO_PARAMS_ANALYTICSID: ${{ secrets.ANALYTICS_WEBSITE_ID }}
         run: |
           hugo build --minify
 

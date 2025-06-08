@@ -4,6 +4,8 @@ title: 'Webview'
 summary: 'Create desktop applications using Go and Webview, packaging them into a single executable.'
 showToc: true
 slug: 'go-webview-gui'
+cover:
+    image: 'index_page_css.png'
 tags:
     - webview
     - Go

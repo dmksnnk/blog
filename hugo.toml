@@ -33,13 +33,16 @@ weight = 5
 
 # JSON necessary for search
 [outputs]
-    home = ['html', 'rss', 'json'] 
+    home = ['html', 'rss', 'json']
+
+[taxonomies]
+  category = "" # This disables the 'categories' taxonomy
 
 [params]
 showReadingTime = true
 defaultTheme = 'auto'
 mainSections = ['blog', 'howto']
-    
+
     [params.homeInfoParams]
         Title = 'Hi there 👋'
         Content = """This is a personal blog where I share my knowledge and experiences about software development, Go programming, and more.

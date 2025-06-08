@@ -25,6 +25,8 @@ jobs:
           # extended: true
 
       - name: Build hugo
+        env:
+          HUGO_PARAMS_ANALYTICSID: ${{ secrets.HUGO_PARAMS_ANALYTICSID }}
         run: |
           hugo build --minify
 

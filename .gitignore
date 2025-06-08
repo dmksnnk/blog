@@ -25,6 +25,9 @@ bin/
 # Hugo public directory
 public/
 
+# Hugo cache directory
+resources/
+
 # chat instructions
 .instructions.md
 

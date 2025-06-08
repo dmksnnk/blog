@@ -1,10 +1,9 @@
 ---
 date: '2025-06-04T18:27:15+02:00'
-draft: true
 title: 'Golden Tests'
 slug: 'golden-tests'
 showToc: true
-summary: 'Use Golden files for testing APIs'
+summary: 'Use golden files for testing APIs'
 cover:
     image: 'golden-brick.png'
 tags:
@@ -328,5 +327,5 @@ As a next step, consider using `testscript`.
 For more details, see [How Go Tests "go test"](https://atlasgo.io/blog/2024/09/09/how-go-tests-go-test)
 about testing CLI outputs with golden files and small test scripts.
 
-Use these tools with caution and only where they make sense. Overusing them can unnecessarily 
+Use these tools with caution and only where they make sense. Overusing them can unnecessarily
 complicate your test code, which means the [tests won't be your helpers](/blog/test-smell/).

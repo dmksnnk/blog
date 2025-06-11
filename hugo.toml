@@ -35,9 +35,6 @@ weight = 5
 [outputs]
     home = ['html', 'rss', 'json']
 
-[taxonomies]
-  category = "" # This disables the 'categories' taxonomy
-
 [params]
 showReadingTime = true
 defaultTheme = 'auto'

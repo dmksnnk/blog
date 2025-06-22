@@ -6,6 +6,10 @@ theme = 'papermod'
 # Generate a nice robots.txt for SEO
 enableRobotsTXT = true
 
+[taxonomies]
+  tag = 'tags'
+  series = 'series'
+
 [[menu.main]]
 name = "🏠"
 url = "/"
@@ -22,14 +26,19 @@ url = "/howto/"
 weight = 3
 
 [[menu.main]]
+name = "Series"
+url = "/series/"
+weight = 4
+
+[[menu.main]]
 name = "Tags"
 url = "/tags/"
-weight = 4
+weight = 5
 
 [[menu.main]]
 name = "Search"
 url = "/search/"
-weight = 5
+weight = 6
 
 # JSON necessary for search
 [outputs]

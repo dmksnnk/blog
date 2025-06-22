@@ -1,0 +1,31 @@
+{{ define "main" }}
+<header class="page-header">
+  <h1>{{ .Title }}</h1>
+  {{- if .Description }}
+  <div class="post-description">
+    {{ .Description | markdownify }}
+  </div>
+  {{- end }}
+</header>
+
+<div class="post-list">
+  {{ range .Data.Terms.Alphabetical }}
+    <article class="post-entry">
+      <header class="entry-header">
+        <h2 class="entry-hint-parent">
+          <a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a>
+        </h2>
+      </header>
+      {{ with .Page.Params.description }}
+      <div class="entry-content">
+        <p>{{ . | markdownify }}</p>
+      </div>
+      {{ end }}
+      <footer class="entry-footer">
+        <span class="series-count">Posts: {{ .Count }}</span>
+      </footer>
+      <a class="entry-link" aria-label="series link to {{ .Page.Title | plainify }}" href="{{ .Page.RelPermalink }}"></a>
+    </article>
+  {{ end }}
+</div>
+{{ end }}

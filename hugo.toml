@@ -1,6 +1,6 @@
 baseURL = 'https://getpid.dev/'
 languageCode = 'en-us'
-title = 'getpid.dev | Software Engineering & Personal Thoughts'
+title = 'Software Engineering & Personal Thoughts'
 theme = 'papermod'
 
 # Generate a nice robots.txt for SEO

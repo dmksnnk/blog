@@ -33,3 +33,6 @@ resources/
 
 # Hugo build lock file
 .hugo_build.lock
+
+# Copilot specific files
+copilot-instructions.md

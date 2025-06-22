@@ -145,58 +145,7 @@ func (a API) Greet(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-{{< details summary="api.go" >}}
-
-```go
-package api
-
-import (
-    "encoding/json"
-    "fmt"
-    "net/http"
-)
-
-type GreetRequest struct {
-    Name string `json:"name"`
-}
-type GreetResponse struct {
-    Message string `json:"message"`
-}
-
-type API struct{}
-
-func NewAPI() API {
-    return API{}
-}
-
-func (a API) Greet(w http.ResponseWriter, r *http.Request) {
-    var req GreetRequest
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
-        return
-    }
-
-    resp := GreetResponse{
-        Message: fmt.Sprintf("Hello, %s!", req.Name),
-    }
-
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(resp); err != nil {
-        http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-        return
-    }
-}
-
-func NewRouter(api API) *http.ServeMux {
-    mux := http.NewServeMux()
-
-    mux.HandleFunc("POST /greet", api.Greet)
-
-    return mux
-}
-```
-
-{{< /details >}}
+See full code in [api.go](https://github.com/dmksnnk/blog/blob/main/examples/golden/api.go).
 
 Instead of embedding the JSON payloads directly in our test code, we'll create two separate files in our `testdata` directory. The folder structure looks like this:
 
@@ -252,74 +201,7 @@ if resp.StatusCode != 200 {
 assertResponse(t, resp, "response.json")
 ```
 
-{{< details summary="api_test.go" >}}
-
-```go
-package api_test
-
-import (
-    "encoding/json"
-    "io"
-    "net/http"
-    "net/http/httptest"
-    "testing"
-
-    api "example.com/golden"
-    "example.com/golden/golden"
-    "github.com/google/go-cmp/cmp"
-)
-
-func TestGreetAPI(t *testing.T) {
-    a := api.NewAPI()
-    router := api.NewRouter(a)
-
-    srv := httptest.NewServer(router)
-    defer srv.Close()
-
-    client := srv.Client()
-    resp, err := client.Post(srv.URL+"/greet", "application/json", golden.Open(t, "request.json"))
-    if err != nil {
-        t.Fatalf("make request: %s", err)
-    }
-    defer resp.Body.Close()
-
-    if resp.StatusCode != 200 {
-        t.Fatalf("expected status 200, got %d", resp.StatusCode)
-    }
-
-    assertResponse(t, resp, "response.json")
-}
-
-func assertResponse(t *testing.T, resp *http.Response, fixturePath string) {
-    t.Helper()
-
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        t.Fatalf("read response body: %v", err)
-    }
-
-    assertEqualJSON(t, golden.ReadBytes(t, fixturePath), body)
-}
-
-func assertEqualJSON(t *testing.T, wantJSON, gotJSON []byte) {
-    t.Helper()
-
-    var want, got any
-    if err := json.Unmarshal(wantJSON, &want); err != nil {
-        t.Fatalf("unmarshal want JSON: %v", err)
-    }
-    if err := json.Unmarshal(gotJSON, &got); err != nil {
-        t.Fatalf("unmarshal got JSON: %v", err)
-    }
-
-    if diff := cmp.Diff(want, got); diff != "" {
-        t.Errorf("JSON mismatch (-want +got):\n%s", diff)
-    }
-}
-
-```
-
-{{< /details >}}
+The code for the test is available in [api_test.go](https://github.com/dmksnnk/blog/blob/main/examples/golden/api_test.go).
 
 That's it! You can use the same approach for testing generated files, CLI outputs, or any other text-based outputs.
 
@@ -329,3 +211,5 @@ about testing CLI outputs with golden files and small test scripts.
 
 Use these tools with caution and only where they make sense. Overusing them can unnecessarily
 complicate your test code, which means the [tests won't be your helpers](/blog/test-smell/).
+
+For the complete source code and example files, see the [full example on GitHub](https://github.com/dmksnnk/blog/tree/main/examples/golden/).

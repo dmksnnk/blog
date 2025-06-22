@@ -14,7 +14,6 @@ import (
 
 func main() {
 	go runServer()
-	time.Sleep(100 * time.Millisecond)
 
 	certPool := x509.NewCertPool()
 	certData, err := os.ReadFile("cert.pem")

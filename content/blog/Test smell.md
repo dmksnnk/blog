@@ -4,7 +4,7 @@ title: 'Test smell'
 slug: 'test-smell'
 description: 'Recognize and address common test smells to improve your tests and code quality.'
 cover:
-    image: 'test-smell.png'
+    image: 'test-smell.svg'
 tags:
   - testing
 ---

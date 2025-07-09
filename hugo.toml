@@ -44,6 +44,11 @@ weight = 6
 [outputs]
     home = ['html', 'rss', 'json']
 
+[markup]
+  [markup.highlight]
+    noClasses = false
+    style = "nord"
+
 [params]
 showReadingTime = true
 defaultTheme = 'auto'

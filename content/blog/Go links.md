@@ -46,7 +46,7 @@ This page is a collection of useful links about Go.
 ## Organizing code
 
 - [Organizing a Go module](https://go.dev/doc/modules/layout) - Official one.
-- [Go Project Layout](https://github.com/golang-standards/project-layout) - It is not an official one, but it can be used to gather ideas on where to put some exotic parts of the repo. 
+- [Go Project Layout](https://github.com/golang-standards/project-layout) - It is not an official one, but it can be used to gather ideas on where to put some exotic parts of the repo.
 
 ## Basic structures internals
 
@@ -71,9 +71,10 @@ This page is a collection of useful links about Go.
     - Package [rheos](https://github.com/dmksnnk/rheos) provides generalized approach for this pattern.
 - [Ultimate Visual Guide to Go Enums and iota](https://blog.learngoprogramming.com/golang-const-type-enums-iota-bc4befd096d3) - All about Enums and iota.
 - [Using ldflags to Set Version Information for Go Applications](https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications)  - Injecting stuff during build time.
-- v2 and Beyond - how to release a new major version:  
+- v2 and Beyond - how to release a new major version:
     - [Go Modules: v2 and Beyond](https://go.dev/blog/v2-go-modules)
     - [A pragmatic guide to Go module updates](https://carlosbecker.com/posts/pragmatic-gomod-bump/)
 - [Go Error Propagation and API Contracts](https://matttproud.com/blog/posts/go-errors-and-api-contracts.html) - TLDR; Errors are the part of your public interface too.
 - [Graceful Shutdown in Go: Practical Patterns](https://victoriametrics.com/blog/go-graceful-shutdown/index.html) - Handling signals for graceful shutdowns.
+- [Finding unreachable functions with deadcode](https://go.dev/blog/deadcode)
 

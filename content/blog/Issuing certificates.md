@@ -6,11 +6,7 @@ showToc: true
 draft: false
 cover:
     image: 'certificates.svg'
-summary: |
-    A practical guide to issuing TLS certificates in Go.
-    Learn how to create self-signed certificates,
-    set up a Certificate Authority (CA), establish a trust chain,
-    and issue certificates from a Certificate Signing Request (CSR).'
+summary: 'A practical guide to issuing TLS certificates in Go: self-signed, Certificate Authority, Certificate Signing Request.'
 tags:
     - Go
     - x509
@@ -30,7 +26,7 @@ When a client receives a certificate, it can validate that the certificate is si
 and is issued to the expected entity. In the case of HTTPS, when a client (e.g., a  web browser) receives a server's certificate,
 it verifies that the certificate is signed by a trusted CA and that the DNS name in it matches the requested host.
 
-# Self-signed certificates
+## Self-signed certificates
 
 Self-signed certificates are certificates that are signed by the entity itself.
 This is mainly useful for testing. First, we will generate a random serial number:
@@ -161,7 +157,7 @@ Certificate:
 {{< /details >}}
 
 
-# Root CA Certificate
+## Root CA Certificate
 
 Now that we have covered the basics, let's create a Root CA certificate.
 This will be a self-signed certificate, much like the previous one, but with some key differences:
@@ -208,7 +204,7 @@ X509v3 extensions:
         CA:TRUE
 ```
 
-# Intermediate CA Certificate
+## Intermediate CA Certificate
 
 Now that we have our new root CA, we can create intermediate CAs.
 This means our root certificate can issue new CA certificates for intermediate CAs,
@@ -280,7 +276,7 @@ depth=0: O=Example Intermediate CA (untrusted)
 depth=1: O=Example Corp
 ```
 
-# Certificate Signing Request
+## Certificate Signing Request
 
 A [Certificate Signing Request](https://en.wikipedia.org/wiki/Certificate_signing_request) (CSR)
 is a message you send to a CA to obtain a certificate.

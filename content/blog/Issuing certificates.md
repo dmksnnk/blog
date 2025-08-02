@@ -17,8 +17,8 @@ tags:
     - TLS
 ---
 
-I don't have in-depth knowledge of how TLS works under the hood.
-This post is a practical guide with experiments to learn more about creating certificates.
+_Disclaimer_: I don't have in-depth knowledge of how TLS works under the hood.
+This post more of a practical guide with the goal to learn more about creating certificates in Go.
 
 We will cover how to create a self-signed certificate,
 a Certificate Authority (CA) to issue certificates, how to create a certificate trust chain

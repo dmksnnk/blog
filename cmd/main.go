@@ -32,7 +32,11 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/-/health", health())
-	mux.Handle("/", http.FileServerFS(publicFS))
+	mux.Handle("/", GzipMiddleware(
+		CacheMiddleware(
+			http.FileServerFS(publicFS),
+		),
+	))
 
 	srv := http.Server{
 		Addr:    cfg.ListenAddress,

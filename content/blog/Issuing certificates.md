@@ -5,7 +5,7 @@ slug: 'tls-certificates'
 showToc: true
 draft: false
 cover:
-    image: 'certificates.svg'
+    image: 'images/certificates.svg'
 summary: 'A practical guide to issuing TLS certificates in Go: self-signed, Certificate Authority, Certificate Signing Request.'
 tags:
     - Go

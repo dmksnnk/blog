@@ -5,7 +5,7 @@ slug: 'golden-tests'
 showToc: true
 summary: 'Use golden files for testing APIs'
 cover:
-    image: 'golden-brick.svg'
+    image: 'images/golden-brick.svg'
 tags:
     - Go
     - testing

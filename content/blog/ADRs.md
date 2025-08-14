@@ -19,13 +19,14 @@ Discuss. Write down how the actual solution will be implemented.
 
 After reading about the writing culture and the use of ADRs at other companies, we decided to try it out.
 So far, we have been able to confirm:
-- **It spreads knowledge**: Instead of answering the same questions again and again,
-    you can write down the answers once and redirect people to the document with all the relevant information.
-- **Consensus**: This should be a place where all team members are free to express their perspectives and concerns
-    and to find the best solution given the requirements and limitations.
+- **It spreads knowledge**: The team is on the same page and understands where we are heading. As a bonus,
+    instead of answering the same questions again and again, you can write down the answers once and
+    redirect people to the document with all the relevant information.
 - **It preserves knowledge**: I often find myself going back to it to remember what we chose to implement and why.
-- **Paper trail**: It can be evidence of what was agreed upon, to cover you if something goes south.
-- **Time well invested**: Many corner cases and potential problems are discovered long before the actual implementation.
+- **It builds consensus**: This should be a place where all team members are free to express their perspectives and concerns
+    and to find the best solution given the requirements and limitations.
+- **It creates a paper trail**: It can be evidence of what was agreed upon, to cover you if something goes south.
+- **It is time well invested**: Many corner cases and potential problems are discovered long before the actual implementation.
     Often, implementing and writing the code is the easiest part.
 
 Most importantly, I was able to confirm a well-known fact:
@@ -35,12 +36,12 @@ If a decision is important and could have significant consequences, every involv
 read the document and give their yea or nay. Sometimes it is hard to make them read it because everyone has their own
 stuff to care about. For example, at AWS, for the first 10-15 minutes of a meeting, people sit in silence
 and read the whole document. After that, you can have a productive discussion, as everybody
-is on the same page. This might be a bit awkward. Instead, we just jump on a call/meeting with
+is on the same page. This might be a bit awkward, instead, we just jump on a call/meeting with
 all involved parties to quickly go through and explain the document.
 
 Below is an overview of how we implement the technical decision process.
-Ideally, it should be simplified even more, but simple is hard. We are trying to remove as much friction as possible.
-Your process may differ, but this is what has worked for us.
+Ideally, it should be simplified even more, but simple is hard ©. We are trying to remove as much friction as possible.
+Your process may differ, but this is what worked for us.
 
 ## High-level process
 

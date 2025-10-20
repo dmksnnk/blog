@@ -69,22 +69,22 @@ remove unsupported characters, and add a random suffix, so the index name is uni
 
 ```go
 func newIndexName(t *testing.T) string {
-	name := strings.ToLower(t.Name())
-	if len(name) > 247 { // 247 = 255 (max 255 bytes index name) - 8 (random suffix) - 1 (underscore)
-		name = name[:247]
-	}
+    name := strings.ToLower(t.Name())
+    if len(name) > 247 { // 247 = 255 (max 255 bytes index name) - 8 (random suffix) - 1 (underscore)
+        name = name[:247]
+    }
 
-	mapper := func(r rune) rune {
-		// allow only [a-z0-9_]
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' {
-			return r
-		}
+    mapper := func(r rune) rune {
+        // allow only [a-z0-9_]
+        if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' {
+            return r
+        }
 
-		return '_'
-	}
-	name = strings.Map(mapper, name)
+        return '_'
+    }
+    name = strings.Map(mapper, name)
 
-	return name + "_" + randString()
+    return name + "_" + randString()
 }
 ```
 
@@ -134,40 +134,39 @@ Store a document and search for it:
 
 ```go
 func TestStorage(t *testing.T) {
-	store := storagetest.NewBookstore(t)
+    store := storagetest.NewBookstore(t)
 
-	book := storage.Book{
-		Title:  "The Great Gatsby",
-		Author: "F. Scott Fitzgerald",
-	}
+    book := storage.Book{
+        Title:  "The Great Gatsby",
+        Author: "F. Scott Fitzgerald",
+    }
 
-	if err := store.IndexBook(context.TODO(), book); err != nil {
-		t.Fatalf("index document: %s", err)
-	}
+    if err := store.IndexBook(context.TODO(), book); err != nil {
+        t.Fatalf("index document: %s", err)
+    }
 
-	books, err := store.Search(context.TODO(), "Gatsby")
-	if err != nil {
-		t.Fatalf("search: %s", err)
-	}
+    books, err := store.Search(context.TODO(), "Gatsby")
+    if err != nil {
+        t.Fatalf("search: %s", err)
+    }
 
-	if len(books) != 1 {
-		t.Fatalf("expected 1 book, got %d", len(books))
-	}
+    if len(books) != 1 {
+        t.Fatalf("expected 1 book, got %d", len(books))
+    }
 
-	if books[0] != book {
-		t.Fatalf("expected %+v, got %+v", book, books[0])
-	}
+    if books[0] != book {
+        t.Fatalf("expected %+v, got %+v", book, books[0])
+    }
 }
 ```
 
 The full code is available in [storage_test.go](https://github.com/dmksnnk/blog/tree/main/examples/elasticsearch-integration/storage_test.go).
 
-Run it all together with:
+Run the test with the Elasticsearch address set:
 
 ```sh
-make test
+ELASTICSEARCH_ADDRESS=http://localhost:9200 go test ./...
 ```
-
 
 ## Inspecting failed tests
 

@@ -18,6 +18,8 @@ func GzipMiddleware(next http.Handler) http.Handler {
 		switch ext { // "" is for directories, default to index.html
 		case "", ".html", ".css", ".js", ".json", ".xml", ".svg":
 			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Add("Vary", "Accept-Encoding")
+			w.Header().Del("Content-Length") // need to remove content length since it will be different
 			grw := newGzipResponseWriter(w)
 			defer grw.Close()
 			next.ServeHTTP(grw, r)

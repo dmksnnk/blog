@@ -148,12 +148,14 @@ When a system produces an event, it adds a logical timestamp to all events -
 always increasing value. This can be a simple counter for all produced events,
 so each new produced event has `timestamp = timestamp + 1`.
 
-> [!NOTE]
-> Using actual clock for timestamps is a bad idea, clocks are often out-of-sync,
-> two computers in the same room can have difference in tens of minutes.
-> Imagine processing tens of thousands of events per second,
-> microsecond drift of the clock may cause big problems.
+{{< alert note >}}
 
+Using actual clock for timestamps is a bad idea, clocks are often out-of-sync,
+two computers in the same room can have difference in tens of minutes.
+Imagine processing tens of thousands of events per second,
+microsecond drift of the clock may cause big problems.
+
+{{< /alert >}}
 
 Let’s say we have processed events in the order:
 
@@ -192,7 +194,7 @@ This conflict resolution is known as **Last-Write-Wins (LWW)**.
 ### Types of CRDTs
 
 The problem can happen when events are not just a log, which can be reordered,
-but changes applied to the object.
+but when changes are applied to the object.
 
 Looking back at our user changes events example. If user changes
 its username, system can send only change, for example
@@ -220,7 +222,7 @@ e1(1,A),e2(2,A),e1(3,A)
 
 You need to restore the order of events to get to the correct state of the user.
 
-In the case of state-based CRDTs (whole state propagated),
+In the case of State-Based CRDTs (whole state propagated),
 you just need to process events that have a bigger timestamp than you already have.
 For our example, we already have entities in the version `e1(3,A),e2(2,A)`,
 so we can skip events with lower timestamps and process only `e2(3,B),e1(4,B)`.
@@ -234,7 +236,7 @@ e2 has a version (2,A)
 e2(2,A) < e2(3,B) => e2(3,B) // apply
 ```
 
-In the case of operation-based CRDTs (only changes propagated), things get more
+In the case of Operation-Based CRDTs (only changes propagated), things get more
 complex. The solution is to undo all events up to `e1(1,A)` and re-apply events
 in correct order. This approach is known as a _time-warp_.
 
@@ -286,7 +288,7 @@ User A adds an exclamation mark `!` at the end. It got assigned a new index:
 ```
 
 At the same time, user B adds a comma `,` after `o`, it gets assigned a new
-index number:
+index between `5.0` and `6.0`:
 
 ```
  H   e   l   l   o   ,   _   W   o   r   l    d

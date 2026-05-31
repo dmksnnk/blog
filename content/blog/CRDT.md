@@ -183,7 +183,16 @@ ReplicaB -> user1(2,B),user2(3,B),user1(4,B)
 ```
 
 Events are ordered by the counter part of the timestamp, replicaID is used to
-resolve the conflict on ties. Total order will be:
+resolve the conflict on ties.
+
+- At timestamp `1` we have only one event `user1(1,A)`, so it is the first event.
+- At timestamp `2` we have two events `user2(2,A)` and `user1(2,B)`, we need to
+  decide which one goes first. We can use replica ID to resolve the conflict:
+  `A` goes before `B`, so `user2(2,A)` goes before `user1(2,B)`.
+- At timestamp `3` is the similar situation, we resolve conflict by replica ID,
+  so `user1(3,A)` goes before `user2(3,B)`.
+
+Total order will be:
 
 ```
 user1(1,A),user2(2,A),user1(2,B),user1(3,A),user2(3,B),user1(4,B)
@@ -222,10 +231,11 @@ e1(1,A),e2(2,A),e1(3,A)
 
 You need to restore the order of events to get to the correct state of the user.
 
-In the case of State-Based CRDTs (whole state propagated),
-you just need to process events that have a bigger timestamp than you already have.
-For our example, we already have entities in the version `e1(3,A),e2(2,A)`,
-so we can skip events with lower timestamps and process only `e2(3,B),e1(4,B)`.
+In the case of State-Based CRDTs (whole state propagated), you just need to
+process events that have a bigger timestamp than you already have.
+For our example, before connection is restore, we have entities in the
+version `e1(3,A),e2(2,A)`, so we can skip events with lower timestamps and
+process only `e2(3,B),e1(4,B)`.
 
 ```
 e1 has a version (3,A)

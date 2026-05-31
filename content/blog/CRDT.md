@@ -15,12 +15,10 @@ tags:
     - distributed systems
 ---
 
-# CRDT and Event-Driven Systems
-
-Conflict-free Replicated Data Type. Mostly known for its use in collaborative
-software, like collaborative editing tools. The name CRDT is a little bit
-misleading, not that there are no conflicts, just that conflict resolution is
-built into the data type itself.
+Conflict-free Replicated Data Type (CRDT). Mostly known for its use in
+collaborative software, like collaborative editing tools. The name CRDT
+is a little bit misleading, not that there are no conflicts, just that conflict
+resolution is built into the data type itself.
 
 We will look at them from the side of event-driven distributed systems.
 You will see that those are closely related and lessons from CRDTs directly

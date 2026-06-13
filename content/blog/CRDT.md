@@ -15,45 +15,48 @@ tags:
     - distributed systems
 ---
 
-Conflict-free Replicated Data Type (CRDT). Mostly known for its use in
+Conflict-free Replicated Data Types (CRDTs) are mostly known for their use in
 collaborative software, like collaborative editing tools. The name CRDT
-is a little bit misleading, not that there are no conflicts, just that conflict
-resolution is built into the data type itself.
+is a little bit misleading: not that there are no conflicts, just that
+conflict resolution is built into the data type itself.
 
-We will look at them from the side of event-driven distributed systems.
-You will see that those are closely related and lessons from CRDTs directly
-applicable to event-driven systems.
+We will look at them from the perspective of event-driven distributed systems.
+You will see that they are closely related and that lessons from CRDTs are
+directly applicable to event-driven systems. First, some definitions.
 
 ## Total order
 
 As the name implies, this is when we know the total order of events.
-For example, in the bank account, we have a log of all deposits and withdrawals:
+For example, in a bank account, we have an *ordered* log of
+all deposits and withdrawals:
 
 ```
 +$100 -$80 +$20 -$40
 ```
-If we change the order of events, we'll get overdraft:
+The order is important here: if we change the order of events,
+we'll get an overdraft:
 
 ```
 +$100 -$80 -$40 = -$20, oops, overdraft!
 ```
 
-Total order is a time-ordered log of all changes, from creation of the
-object to its death.
+A total order is a time-ordered log of all changes, from the creation of the
+object to its death. In this case, it can be a log of all operations
+from the opening of the bank account to its closing.
 
-In databases, each transaction is an event. In serializable isolation
-level (the highest one), database does different kind of tricks to
-guarantee that each transaction is executed in such a way,
-that appear to be executed in serial order, one after another.
+In databases, each transaction is an event. At the serializable isolation
+level (the highest one), a database uses different kinds of tricks to
+guarantee that transactions appear to be executed in serial order,
+one after another.
 This means transactions are in total order.
 
 ## Partial order
 
-Causal order - _happen before_ - one event happened before the other,
+Causal order - _happened before_ - means one event happened before another,
 we do not have or do not need the _total order_ of all events.
 Causality just means that you know what caused what.
 
-For example, we have user login-logout events in Kafka topic.
+For example, we have user login-logout events in a Kafka topic.
 `user1` events are always stored in partition 1, `user2` events are stored
 in partition 2. Events for `user1` are _causally ordered_, e.g. logout cannot
 happen before login:
@@ -65,12 +68,12 @@ partition 2:                (user2 login) (user2 logout)
 ```
 
 Events for `user1` and `user2` are _concurrent_. Events for `user2` may or
-may not happen before events for the `user1` _in total order_, and, frankly,
+may not happen before events for `user1` _in total order_, and, frankly,
 we don’t care. We also may process events not in the total order,
 e.g. process `user1` login after `user2` login.
 
-When we do not care about total order of events,
-this is known as _optimistic replication_.
+When we do not care about the total order of events,
+it is known as _optimistic replication_.
 
 ## Commutative operations
 
@@ -79,8 +82,8 @@ like adding numbers, the order is not important.
 
 ### Counter
 
-A good example is a distributed counter. Imagine a like button on Youtube video.
-Every time a user clicks +1, an event is sent. To calculate total number of likes,
+A good example is a distributed counter. Imagine a like button on a YouTube video.
+Every time a user clicks +1, an event is sent. To calculate the total number of likes,
 you just count all the click events:
 
 ```
@@ -95,10 +98,10 @@ There can be multiple levels of aggregation:
 +1 +1 +1 ... +1 => aggregate => +2 +1 .../
 ```
 
-In whatever order we process the events, result will be the same.
+In whatever order we process the events, the result will be the same.
 
 The same works for dislikes: you have one positive counter and one negative
-counter, the total count will be positive count minus negative count.
+counter, and the total count will be the positive count minus the negative count.
 
 **Grow-Only Counter** is the first CRDT we have encountered.
 
@@ -106,8 +109,8 @@ counter, the total count will be positive count minus negative count.
 
 Imagine an auction system, where bids arrive from many clients across distributed
 replicas. Each replica tracks the highest bid for the item.
-Whenever a new bid arrives, we compare it with the current highest bid,
-if it is higher - we update the highest bid, if not - ignore it.
+Whenever a new bid arrives, we compare it with the current highest bid.
+If it is higher, we update the highest bid, if not, we ignore it.
 
 ```
 ReplicaA -> $100, $50, $120 => max => $120  \
@@ -120,9 +123,9 @@ of operations does not affect the result.
 
 ### Grow-only Set
 
-Back to our Youtube video, we want to track all unique users who watched the
+Back to our YouTube video, we want to track all unique users who watched the
 video. We can have a set of user IDs and whenever we receive an event,
-we check if user ID is already in the set, if not - we add it, if yes -
+we check if the user ID is already in the set. If not, we add it, if yes -
 ignore it.
 
 ```
@@ -131,27 +134,27 @@ ReplicaA -> 1, 2, 1 => set => {1, 2}   \
 ReplicaB -> 2, 3, 4 => set => {2, 3, 4} /
 ```
 
-This is known as **Grow-only Set**. It only allows adds, once added, element
+This is known as **Grow-only Set**. It only allows adds, once added, an element
 cannot be removed.
 
 ## Restoring order of events
 
 In partially ordered systems, it is still possible to get the order of
-events after the fact. It is done by using _logical clocks_. The common choice is
+events after the fact. This is done by using _logical clocks_. The common choices are
 [Lamport timestamp](https://en.wikipedia.org/wiki/Lamport_timestamp)
 for global ordering or [Vector clock](https://en.wikipedia.org/wiki/Vector_clock)
 for causality between events.
 
-When a system produces an event, it adds a logical timestamp to all events -
-always increasing value. This can be a simple counter for all produced events,
+When a system produces an event, it adds a logical timestamp to it -
+an always-increasing value. This can be a simple counter for all produced events,
 so each new produced event has `timestamp = timestamp + 1`.
 
 {{< alert note >}}
 
-Using actual clock for timestamps is a bad idea, clocks are often out-of-sync,
-two computers in the same room can have difference in tens of minutes.
-Imagine processing tens of thousands of events per second,
-microsecond drift of the clock may cause big problems.
+Using an actual clock for timestamps is a bad idea. Clocks are often out of sync,
+two computers in the same room can have a difference of tens of minutes.
+Imagine processing tens of thousands of events per second:
+a microsecond drift of the clock may cause big problems.
 
 {{< /alert >}}
 
@@ -170,7 +173,7 @@ Restoring the total order is fairly simple: order events by timestamp.
 
 ### Conflict resolution
 
-When events are produced from multiple replicas, timestamp often includes
+When events are produced from multiple replicas, the timestamp often includes
 replica ID for conflict resolution. Imagine two replicas updating users
 `user1` and `user2` simultaneously and producing events on each update.
 Each event has a logical timestamp `(counter, replicaID)`:
@@ -180,14 +183,14 @@ ReplicaA -> user1(1,A),user2(2,A),user1(3,A)
 ReplicaB -> user1(2,B),user2(3,B),user1(4,B)
 ```
 
-Events are ordered by the counter part of the timestamp, replicaID is used to
+Events are ordered by the counter component of the timestamp, and replicaID is used to
 resolve the conflict on ties.
 
 - At timestamp `1` we have only one event `user1(1,A)`, so it is the first event.
-- At timestamp `2` we have two events `user2(2,A)` and `user1(2,B)`, we need to
+- At timestamp `2` we have two events `user2(2,A)` and `user1(2,B)`, so we need to
   decide which one goes first. We can use replica ID to resolve the conflict:
   `A` goes before `B`, so `user2(2,A)` goes before `user1(2,B)`.
-- At timestamp `3` is the similar situation, we resolve conflict by replica ID,
+- At timestamp `3` there is a similar situation, we resolve the conflict by replica ID,
   so `user1(3,A)` goes before `user2(3,B)`.
 
 Total order will be:
@@ -201,24 +204,24 @@ This conflict resolution is known as **Last-Write-Wins (LWW)**.
 ### Types of CRDTs
 
 The problem can happen when events are not just a log, which can be reordered,
-but when changes are applied to the object.
+but changes that are applied to the object.
 
-Looking back at our user changes events example. If user changes
-its username, system can send only change, for example
+Looking back at our user change events example. If a user changes
+their username, the system can send only the change, for example
 `{userId: 123, username: biggus-dickus-69}`
 or you can send the whole state of the user object
 `{userId: 123, username: biggus-dickus-69, email: ..., phone: ...}`.
 
-When you are providing only changes, it is called **Operation-Based CRDT**.
-When you are distributing whole state, it is called **State-Based CRDT**.
+When you are providing only changes, it is called an **Operation-Based CRDT**.
+When you are distributing the whole state, it is called a **State-Based CRDT**.
 Both have their pros and cons. Operation-Based CRDTs are smaller,
 as you propagate only the change, but have more complex conflict resolution.
 State-Based CRDTs are bigger, but conflict resolution is simpler.
 
-Imagine, you have a system which reads user changes from ReplicaA and ReplicaB,
+Imagine you have a system that reads user changes from ReplicaA and ReplicaB
 and applies these changes to an object. For a short amount of time,
-you have lost a connection for ReplicaB and was processing events only
-from ReplicaA. You have processed `e1(1,A),e2(2,A),e1(3,A)`, then connection
+you lost a connection to ReplicaB and were processing events only
+from ReplicaA. You processed `e1(1,A),e2(2,A),e1(3,A)`, then the connection
 got fixed and you are processing `e1(2,B),e2(3,B),e1(4,B)`.
 
 ```
@@ -231,7 +234,7 @@ You need to restore the order of events to get to the correct state of the user.
 
 In the case of State-Based CRDTs (whole state propagated), you just need to
 process events that have a bigger timestamp than you already have.
-For our example, before connection is restore, we have entities in the
+For our example, before the connection is restored, we have entities at
 version `e1(3,A),e2(2,A)`, so we can skip events with lower timestamps and
 process only `e2(3,B),e1(4,B)`.
 
@@ -246,7 +249,7 @@ e2(2,A) < e2(3,B) => e2(3,B) // apply
 
 In the case of Operation-Based CRDTs (only changes propagated), things get more
 complex. The solution is to undo all events up to `e1(1,A)` and re-apply events
-in correct order. This approach is known as a _time-warp_.
+in the correct order. This approach is known as a _time-warp_.
 
 ```
 e1(1,A),e2(2,A),e1(3,A)──┐
@@ -264,23 +267,23 @@ e1(1,A),e1(2,B),e2(2,A),e1(3,A),e2(3,B),e1(4,B)
 This process can be expensive, as we need to store the different states of the
 object to be able to undo. Also, this can have unexpected _external_ side
 effects. For example, we had a state that tells the system to send an email
-about successful booking of a flight, but later, we receive an event,
-that happened earlier, telling that the flight was actually cancelled before the
+about the successful booking of a flight, but later, we receive an event
+that happened earlier, telling us that the flight was actually cancelled before the
 booking happened. Now we need a "compensation" action, e.g. send an apology
-email explaining a situation, which may or may not be acceptable depending on
+email explaining the situation, which may or may not be acceptable depending on
 the use-case.
 
 ## Sequence CRDTs
 
 All of the above also applies to collaborative editors.
-Each change (character added, item in the list moved, etc.) is an event.
+Each change (a character added, an item in the list moved, etc.) is an event.
 All events are stored in a sequence, which is the same as an event log.
 When several users edit the document offline and then the document is synced,
-editor receives sequences (log of events) from the users and merge them together
-to receive **total order of events**.
+the editor receives sequences (logs of events) from the users and merges them together
+to receive a **total order of events**.
 
-For example, we have a document with a “Hello World” text in it. Each symbol in
-a text got assigned an index. These indexes are constant and do not change:
+For example, we have a document with “Hello World” text in it. Each symbol in
+the text gets assigned an index. These indexes are constant and do not change:
 
 ```
  H   e   l   l   o   _   W   o   r   l    d
@@ -288,7 +291,7 @@ a text got assigned an index. These indexes are constant and do not change:
 ```
 
 Let’s say, there are two users, A and B, both editing document offline.
-User A adds an exclamation mark `!` at the end. It got assigned a new index:
+User A adds an exclamation mark `!` at the end. It gets assigned a new index:
 
 ```
  H   e   l   l   o   _   W   o   r   l    d    !
@@ -311,7 +314,7 @@ merge the changes:
 1.0 2.0 3.0 4.0 5.0 5.5 6.0 7.0 8.0 9.0 10.0 11.0 12.0
 ```
 
-In this example, we are using float numbers, so we can get very large
+In this example, we are using floating-point numbers, so we can get a very large
 number of in-between indexes. In practice, variable-depth integers are used,
 like [LOGOOT](https://inria.hal.science/inria-00432368/document/) and
 [LSEQ](https://hal.science/hal-00921633/document).
@@ -324,7 +327,7 @@ in how they resolve conflicts and store sequences.
 The world of CRDTs and collaborative editors is very close to event-based
 distributed systems.
 
-- If you look hard enough, event-driven services are kind-of eventual
+- If you look hard enough, event-driven services are kind of eventually
   consistent replicas of each other, with different views on the same data.
 - Try to avoid conflicts, use _commutative operations_ where possible.
 - Use _version clocks_ to get a causal order of events per entity if

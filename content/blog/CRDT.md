@@ -16,8 +16,10 @@ tags:
 ---
 
 Conflict-free Replicated Data Types (CRDTs) are mostly known for their use in
-collaborative software, like collaborative editing tools. The name CRDT
-is a little bit misleading: not that there are no conflicts, just that
+collaborative software, like collaborative editing tools, where users
+can edit a document offline and the changes will be synced, merged and conflicts
+resolved automatically.
+The name CRDT is a little bit misleading: not that there are no conflicts, just that
 conflict resolution is built into the data type itself.
 
 We will look at them from the perspective of event-driven distributed systems.
@@ -33,6 +35,7 @@ all deposits and withdrawals:
 ```
 +$100 -$80 +$20 -$40
 ```
+
 The order is important here: if we change the order of events,
 we'll get an overdraft:
 
@@ -40,7 +43,7 @@ we'll get an overdraft:
 +$100 -$80 -$40 = -$20, oops, overdraft!
 ```
 
-A total order is a time-ordered log of all changes, from the creation of the
+A total order is a *time-ordered log of all changes*, from the creation of the
 object to its death. In this case, it can be a log of all operations
 from the opening of the bank account to its closing.
 
@@ -52,13 +55,13 @@ This means transactions are in total order.
 
 ## Partial order
 
-Causal order - _happened before_ - means one event happened before another,
-we do not have or do not need the _total order_ of all events.
+Causal order - *happened before* - means one event happened before another,
+we do not have or do not need the *total order* of all events.
 Causality just means that you know what caused what.
 
 For example, we have user login-logout events in a Kafka topic.
 `user1` events are always stored in partition 1, `user2` events are stored
-in partition 2. Events for `user1` are _causally ordered_, e.g. logout cannot
+in partition 2. Events for `user1` are *causally ordered*, e.g. logout cannot
 happen before login:
 
 ```
@@ -67,38 +70,39 @@ partition 2:                (user2 login) (user2 logout)
 
 ```
 
-Events for `user1` and `user2` are _concurrent_. Events for `user2` may or
-may not happen before events for `user1` _in total order_, and, frankly,
+Events for `user1` and `user2` are *concurrent*. Events for `user2` may or
+may not happen before events for `user1` *in total order*, and, frankly,
 we don’t care. We also may process events not in the total order,
 e.g. process `user1` login after `user2` login.
 
 When we do not care about the total order of events,
-it is known as _optimistic replication_.
+it is known as *optimistic replication*.
 
 ## Commutative operations
 
 Sometimes, you don’t even need a partial order. For commutative operations,
 like adding numbers, the order is not important.
+Now, will look at CRDTs from the perspective of event-driven systems.
 
-### Counter
+### Grow-Only Counter
 
 A good example is a distributed counter. Imagine a like button on a YouTube video.
 Every time a user clicks +1, an event is sent. To calculate the total number of likes,
 you just count all the click events:
 
 ```
-+1 +1 +1 ... +1 => aggregate
++1 +1 +1 ... +1 => sum()
 ```
 
 There can be multiple levels of aggregation:
 
 ```
-+1 +1 +1 ... +1 => aggregate => +5 +7 ...\
-                                           => aggregate => +20 +37 ...
-+1 +1 +1 ... +1 => aggregate => +2 +1 .../
++1 +1 +1 ... +1 => sum() => +5 +7 ...\
+                                      => sum() => +20 +37 ...
++1 +1 +1 ... +1 => sum() => +2 +1 .../
 ```
 
-In whatever order we process the events, the result will be the same.
+`sum` is commutative: in whatever order we process the events, the result will be the same.
 
 The same works for dislikes: you have one positive counter and one negative
 counter, and the total count will be the positive count minus the negative count.
@@ -113,12 +117,12 @@ Whenever a new bid arrives, we compare it with the current highest bid.
 If it is higher, we update the highest bid, if not, we ignore it.
 
 ```
-ReplicaA -> $100, $50, $120 => max => $120  \
-                                             => max => $160
-ReplicaB -> $110, $130, $160 => max => $160 /
+ReplicaA -> $100, $50, $120 => max() => $120  \
+                                               => max() => $160
+ReplicaB -> $110, $130, $160 => max() => $160 /
 ```
 
-This is known as **Max-Register**. The `max` function is commutative - the order
+This is known as **Max-Register**. The `max` function is commutative: the order
 of operations does not affect the result.
 
 ### Grow-only Set
@@ -129,7 +133,7 @@ we check if the user ID is already in the set. If not, we add it, if yes -
 ignore it.
 
 ```
-ReplicaA -> 1, 2, 1 => set => {1, 2}   \
+ReplicaA -> 1, 2, 1 => set => {1, 2}    \
                                          => set => {1, 2, 3, 4}
 ReplicaB -> 2, 3, 4 => set => {2, 3, 4} /
 ```
@@ -140,14 +144,29 @@ cannot be removed.
 ## Restoring order of events
 
 In partially ordered systems, it is still possible to get the order of
-events after the fact. This is done by using _logical clocks_. The common choices are
+events after the fact. This is done by using *logical clocks*. The common choices are
 [Lamport timestamp](https://en.wikipedia.org/wiki/Lamport_timestamp)
-for global ordering or [Vector clock](https://en.wikipedia.org/wiki/Vector_clock)
-for causality between events.
+for global ordering:
+
+```
+timestamp -> process() -> timestamp + 1
+```
 
 When a system produces an event, it adds a logical timestamp to it -
 an always-increasing value. This can be a simple counter for all produced events,
 so each new produced event has `timestamp = timestamp + 1`.
+
+Another option is [Vector clock](https://en.wikipedia.org/wiki/Vector_clock)
+for causality between events. Vector clock is a vector of timestamps,
+where each part of the system increases only its part of the vector.
+
+```
+NodeA: -> (1, 0, 0) -> NodeB: merge((1,0,0), (0,0,0)) = (1,0,0) -> (1, 1, 0)
+```
+
+In this example, NodeA produces an event with timestamp (1, 0, 0). It increments only its part of the clock.
+NodeB receives the event, it does not have knowledge about this event, so it merges the received event with its own state (0, 0, 0), increases its part of the clock and emits event (1, 1, 0).
+By reading timestamp (1, 1, 0), you know that the event was influenced by NodeA and NodeB.
 
 {{< alert note >}}
 
@@ -169,7 +188,6 @@ Restoring the total order is fairly simple: order events by timestamp.
 ```
 (1),(2),(3),(4)
 ```
-
 
 ### Conflict resolution
 
@@ -221,13 +239,13 @@ State-Based CRDTs are bigger, but conflict resolution is simpler.
 Imagine you have a system that reads user changes from ReplicaA and ReplicaB
 and applies these changes to an object. For a short amount of time,
 you lost a connection to ReplicaB and were processing events only
-from ReplicaA. You processed `e1(1,A),e2(2,A),e1(3,A)`, then the connection
-got fixed and you are processing `e1(2,B),e2(3,B),e1(4,B)`.
+from ReplicaA. You processed `u1(1,A),u2(2,A),u1(3,A)`, then the connection
+got fixed and you are processing `u1(2,B),u2(3,B),u1(4,B)`.
 
 ```
-e1(1,A),e2(2,A),e1(3,A)
+ReplicaA: u1(1,A),u2(2,A),u1(3,A)
 
----- broken connection ----  e1(2,B),e2(3,B),e1(4,B)
+ReplicaB: --- broken connection ---  u1(2,B),u2(3,B),u1(4,B)
 ```
 
 You need to restore the order of events to get to the correct state of the user.
@@ -235,37 +253,37 @@ You need to restore the order of events to get to the correct state of the user.
 In the case of State-Based CRDTs (whole state propagated), you just need to
 process events that have a bigger timestamp than you already have.
 For our example, before the connection is restored, we have entities at
-version `e1(3,A),e2(2,A)`, so we can skip events with lower timestamps and
-process only `e2(3,B),e1(4,B)`.
+version `u1(3,A),u2(2,A)`, so we can skip events with lower timestamps and
+process only `u2(3,B),u1(4,B)`.
 
 ```
-e1 has a version (3,A)
-e1(3,A) > e1(2,B) => e1(3,A) // skip processing
-e1(3,A) < e1(4,B) => e1(4,B) // apply
+user1 has a version (3,A)
+u1(3,A) > u1(2,B) => u1(3,A) // skip processing
+u1(3,A) < u1(4,B) => u1(4,B) // apply
 
-e2 has a version (2,A)
-e2(2,A) < e2(3,B) => e2(3,B) // apply
+user2 has a version (2,A)
+u2(2,A) < u2(3,B) => u2(3,B) // apply
 ```
 
 In the case of Operation-Based CRDTs (only changes propagated), things get more
-complex. The solution is to undo all events up to `e1(1,A)` and re-apply events
-in the correct order. This approach is known as a _time-warp_.
+complex. The solution is to undo all events up to `u1(1,A)` and re-apply events
+in the correct order. This approach is known as a *time-warp*.
 
 ```
-e1(1,A),e2(2,A),e1(3,A)──┐
-e1(1,A),e2(2,A) ◀──undo──┘
-e1(1,A)
+u1(1,A),u2(2,A),u1(3,A)──┐
+u1(1,A),u2(2,A) ◀──undo──┘
+u1(1,A)
   ┌─redo──┐
   │       ▼
-e1(1,A),e1(2,B)
-e1(1,A),e1(2,B),e2(2,A)
-e1(1,A),e1(2,B),e2(2,A),e1(3,A)
-e1(1,A),e1(2,B),e2(2,A),e1(3,A),e2(3,B)
-e1(1,A),e1(2,B),e2(2,A),e1(3,A),e2(3,B),e1(4,B)
+u1(1,A),u1(2,B)
+u1(1,A),u1(2,B),u2(2,A)
+u1(1,A),u1(2,B),u2(2,A),u1(3,A)
+u1(1,A),u1(2,B),u2(2,A),u1(3,A),u2(3,B)
+u1(1,A),u1(2,B),u2(2,A),u1(3,A),u2(3,B),u1(4,B)
 ```
 
 This process can be expensive, as we need to store the different states of the
-object to be able to undo. Also, this can have unexpected _external_ side
+object to be able to undo. Also, this can have unexpected *external* side
 effects. For example, we had a state that tells the system to send an email
 about the successful booking of a flight, but later, we receive an event
 that happened earlier, telling us that the flight was actually cancelled before the
@@ -275,9 +293,9 @@ the use-case.
 
 ## Sequence CRDTs
 
-All of the above also applies to collaborative editors.
+We were talking about all of this above in terms of events, but it also applies to collaborative editors.
 Each change (a character added, an item in the list moved, etc.) is an event.
-All events are stored in a sequence, which is the same as an event log.
+All events are stored in a sequence, which is the same as an *event log*.
 When several users edit the document offline and then the document is synced,
 the editor receives sequences (logs of events) from the users and merges them together
 to receive a **total order of events**.
@@ -289,6 +307,9 @@ the text gets assigned an index. These indexes are constant and do not change:
  H   e   l   l   o   _   W   o   r   l    d
 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
 ```
+
+If you look at it, the sequence is like event log, which is totally ordered
+and the index is like a logical clock.
 
 Let’s say, there are two users, A and B, both editing document offline.
 User A adds an exclamation mark `!` at the end. It gets assigned a new index:
@@ -319,8 +340,9 @@ number of in-between indexes. In practice, variable-depth integers are used,
 like [LOGOOT](https://inria.hal.science/inria-00432368/document/) and
 [LSEQ](https://hal.science/hal-00921633/document).
 
-There are different collaborative editors, under the hood they differ
-in how they resolve conflicts and store sequences.
+There are different implementations of collaborative editors,
+under the hood they differ in how they resolve conflicts and store sequences,
+but at their core they are using CRDTs to avoid conflicts.
 
 ## Conclusion
 
@@ -329,9 +351,8 @@ distributed systems.
 
 - If you look hard enough, event-driven services are kind of eventually
   consistent replicas of each other, with different views on the same data.
-- Try to avoid conflicts, use _commutative operations_ where possible.
-- Use _version clocks_ to get a causal order of events per entity if
-  order is important.
+- Try to avoid conflicts, use *commutative operations* where possible.
+- Use *logical clocks* to get a causal order of events if order is important.
 
 ## Sources
 

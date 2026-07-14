@@ -10,3 +10,7 @@ docker-build:
 .PHONY: hugo-build-local
 hugo-build-local:
 	@hugo build --buildDrafts --gc --baseURL localhost:8080
+
+.PHONY: hugo-server
+hugo-server:
+	@hugo server --buildDrafts --gc --baseURL=http://localhost:1313

@@ -47,13 +47,14 @@ CREATE TABLE bidders (
 );
 ```
 
-Because we want to store each (`user_id`, `item_id`) pair only once, we add a unique index on it:
+Because we want to store only unique `user_id` bid on item `item_id` only once,
+we add a unique index on it:
 
 ```sql
 CREATE UNIQUE INDEX unique_item_bidder_idx ON bidders(user_id, item_id);
 ```
 
-Collecting a bidder is then a simple atomic operation. If the user has already bid on this item,
+Collecting bidders is then a simple atomic operation. If the user has already bid on this item,
 we ignore the duplicate:
 
 ```sql
@@ -85,9 +86,9 @@ There can be only one maximum bid per item, so we create a unique index on `item
 CREATE UNIQUE INDEX unique_bids_idx ON max_bids(item_id);
 ```
 
-When we insert a new bid, it is added if the `item_id` has no bid yet. If the `item_id` already
-has a bid (`ON CONFLICT (item_id)`), we update that row only if the new bid is higher
-(`WHERE EXCLUDED.bid > max_bids.bid`):
+When we insert a new bid, it is added if the item `item_id` has no bid yet.
+If the `item_id` already has a bid (`ON CONFLICT (item_id)`), we update that row
+only if the new bid is higher (`WHERE EXCLUDED.bid > max_bids.bid`):
 
 ```sql
 INSERT INTO max_bids (item_id, user_id, bid)
@@ -97,7 +98,8 @@ ON CONFLICT (item_id) DO UPDATE
         user_id    = EXCLUDED.user_id
     WHERE EXCLUDED.bid > max_bids.bid;
 ```
-If we need to know whether the value changed (through an insert or update), we can inspect the
+
+If we need to know whether the value changed (inserted or updated), we can check the
 number of affected rows. It will be 0 if the bid was neither inserted nor updated.
 Most database libraries expose this information. For example, Go provides
 `sql.Result.RowsAffected()`.
@@ -133,8 +135,8 @@ SET "count" = bids_count."count" + 1;
 ## Conditional writes
 
 When an operation cannot be expressed in a commutative form, we can use a conditional update to
-avoid acting on stale data. Assume each user has a wallet in which we track their balance and the
-funds `reserved` for active bids:
+avoid wotking with the stale data. Assume each user has a wallet in which we track
+their balance and the `reserved` amount for the bids:
 
 ```sql
 CREATE TABLE wallets (
@@ -149,7 +151,7 @@ Multiple processes can try to update the same wallet at the same time: a user mi
 bids at once, or a bidding bot might submit them in parallel. Placing a bid is a read-modify-write
 operation: we read the wallet, calculate the new `balance` and `reserved` values in application
 code, and write them back. If we blindly read and then update, another transaction can change the
-wallet between our read and write, causing us to overwrite its result (a lost update).
+state between our read and write, causing us to overwrite its result (a lost update).
 
 One option is to do this pessimistically by locking the row:
 
@@ -185,24 +187,26 @@ UPDATE wallets
 SET balance = $1, reserved = $2
 WHERE user_id = $3 AND balance = $4 AND reserved = $5;
 ```
-The number of affected rows tells us whether the update succeeded: 1 means that it did, while 0
-no row matched: either the values changed or the row no longer exist.
+The number of affected rows tells us whether the update succeeded: 1 means that it did, while 0 -
+either the values changed or the row no longer exist.
 
 Comparing values does not detect an [ABA problem](https://en.wikipedia.org/wiki/ABA_problem):
 a value can change from 100 to 50 and back to 100 before the update.
-This is harmless when the operation depends only on the current compared values.
-However, it may be incorrect in other use cases, such as when intermediate transitions produce
-side effects or correctness depends on the state not having changed.
+This is harmless when the operation depends only on the the compared values.
+But, it may be incorrect in other use cases, for example when transitions produce
+side effects (e.g. sending email) or correctness depends on the state has not been changed.
 
 This is where a version comes into play. In this case, the version is a monotonically increasing
-value. The rule is simple: whenever the row is updated, the writer must increment its version.
-Each update therefore produces a distinct version, allowing us to detect any concurrent
-modification with a single comparison.
+value. All writers must follow the rule: whenever the object is updated,
+it must increment object's version. Each update creates a new version,
+allowing us to detect any concurrent changes.
 
-For example, suppose the balance is 100 at version 10. One process changes the balance to 50 and
+![Version conflice](images/version-conflict.svg#center)
+
+For example, assume we have the balance 100 at version 10. One process changes the balance to 50 and
 the version to 11, and then another process changes the balance back to 100 and the version to 12.
-When the original process, which read version 10, tries to update the balance, its update affects
-no rows, signaling a conflict.
+When the original process, which read version 10, tries to update the balance and
+receives a conflict - no rows updated.
 
 The update is then simply:
 
